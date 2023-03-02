@@ -1,2 +1,2 @@
 [development]
-telegram_bot_token = "secret"
+telegram = {token = "secret"}
