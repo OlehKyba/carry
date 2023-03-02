@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "carry"
+version = "0.1.0"
+description = "The telegram bot for bonus program"
+authors = ["o.kyba <vestigor0@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-telegram-bot = "^20.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
