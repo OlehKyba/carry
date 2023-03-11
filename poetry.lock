@@ -552,6 +552,17 @@ socks = ["httpx[socks]"]
 webhooks = ["tornado (>=6.2,<7.0)"]
 
 [[package]]
+name = "python-telegram-bot-pagination"
+version = "0.0.2"
+description = "Python inline keyboard pagination for Telegram Bot API"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-telegram-bot-pagination-0.0.2.tar.gz", hash = "sha256:46fe884edcc61a346e2c0a8f7fa777486db50cc08a29ff8585d078f9f70c4ec1"},
+]
+
+[[package]]
 name = "qrcode"
 version = "7.4.2"
 description = "QR Code image generator"
@@ -739,4 +750,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "dc3c2ef2a11b2d8b5c93589f382ee7dc3b4e8930fbded8902ef7f01118221da5"
+content-hash = "f56a4dbd9f48b24a96f507576250d757164ebfb69e32d9ee9b01597f97f62d5b"

@@ -47,15 +47,13 @@ class AdminConversationChoices(IntEnum):
     ASK_USER_NICKNAME = 3
     SHOW_USERS = 4
     FIND_USER = 5
-    SHOW_ALL_USERS = 6
-    INCREASE_USER_BALANCE = 7
-    DECREASE_USER_BALANCE = 8
+    INCREASE_USER_BALANCE = 6
+    DECREASE_USER_BALANCE = 7
 
 
 class AdminConversationText(StrEnum):
     CANCEL_COMMAND = "Зупинити команду ❌"
     FIND_USER = "Знайти користувача 🔍"
-    SHOW_ALL_USERS = "Список користувачів"
     INCREASE_USER_BALANCE = "Додати бонуси ⬆️"
     DECREASE_USER_BALANCE = "Зняти бонуси ⬇️"
 
@@ -75,9 +73,6 @@ ADMIN_KEYBOARD = ReplyKeyboardMarkup(
         [
             KeyboardButton(
                 AdminConversationText.FIND_USER,
-            ),
-            KeyboardButton(
-                AdminConversationText.SHOW_ALL_USERS,
             ),
         ],
     ],
@@ -198,7 +193,7 @@ async def show_balance(
 
 async def generate_qr_code(
     update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
+) -> int:
     url = create_deep_linked_url(
         context.bot.username, payload=str(update.message.from_user.id)
     )
@@ -206,6 +201,7 @@ async def generate_qr_code(
     await update.message.reply_photo(
         qr_code, caption="Це QR-код, який ви маєте показати @kerry_queen 🤝"
     )
+    return UserConversationChoices.AFTER_START
 
 
 async def ask_user_nickname(
@@ -377,6 +373,12 @@ COMMAND_HANDLERS: Final[list["BaseHandler"]] = [
                     filters.User(settings.admin_ids)
                     and filters.Text([AdminConversationText.FIND_USER]),
                     ask_user_nickname,
+                ),
+                CommandHandler(
+                    "start",
+                    deep_link_start,
+                    filters.User(settings.admin_ids)
+                    and filters.Regex(r"^/start \d+$"),
                 ),
             ],
             AdminConversationChoices.ASK_USER_NICKNAME: [
