@@ -1,5 +1,11 @@
-[development]
+[default]
 templates_dir = "carry/templates"
+
+[default.usefull_links]
+instagram = "https://instagram.com/kerry.mua.queen"
+easyweek = "https://widget.easyweek.io/prostir-studio/team/39083/41030"
+
+[development]
 telegram = {token = "secret"}
 admin_ids = [417796222]
 db = {uri = "postgresql+asyncpg://postgres:postgres@db:5432/carry"}

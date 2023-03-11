@@ -6,6 +6,8 @@ from telegram import (
     KeyboardButton,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
 )
 from telegram.ext import (
     ContextTypes,
@@ -15,6 +17,7 @@ from telegram.ext import (
     filters,
 )
 from telegram.helpers import create_deep_linked_url
+from telegram.constants import ParseMode
 
 from carry.config import settings
 from carry.context import ctx
@@ -92,23 +95,45 @@ DEEP_LINK_KEYBOARD = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
+LINKS_KEYBOARD = InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton(
+                'Instagram 📷',
+                url=settings.usefull_links.instagram,
+            ),
+            InlineKeyboardButton(
+                'Записатися 💅',
+                url=settings.usefull_links.easyweek,
+            ),
+        ],
+    ],
+)
+
 
 @ctx.with_request_context
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = User.from_telegram(update.message.from_user)
     await ctx.user_repository.upsert_user(user)
     keyboard = ADMIN_KEYBOARD if is_admin(user.id) else USER_KEYBOARD
-    await update.message.reply_text(
+    first_message = await update.message.reply_text(
         render_template("telegram/help.jinja2"),
         reply_markup=keyboard,
+        parse_mode=ParseMode.HTML,
+    )
+    await update.message.reply_text(
+        '*Корисні посилання* 🔗',
+        reply_markup=LINKS_KEYBOARD,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_to_message_id=first_message.id,
     )
     return UserConversationChoices.AFTER_START
 
 
-@ctx.with_request_context
 async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         render_template("telegram/help.jinja2"),
+        reply_markup=LINKS_KEYBOARD,
     )
     return UserConversationChoices.AFTER_START
 
@@ -120,6 +145,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
+@ctx.with_request_context
 async def show_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
@@ -127,8 +153,9 @@ async def show_balance(
         update.message.from_user.id
     )
     await update.message.reply_text(
-        f"На вашому балансі {balance} бонусів!",
+        f"На вашому балансі *{balance} бонусів* 💵",
         reply_to_message_id=update.message.id,
+        parse_mode=ParseMode.MARKDOWN,
     )
     return UserConversationChoices.AFTER_START
 
@@ -141,7 +168,7 @@ async def generate_qr_code(
     )
     qr_code = create_qr_code(url)
     await update.message.reply_photo(
-        qr_code, caption="QR-код, який ви маєте надати Карині!"
+        qr_code, caption="Це QR-код, який ви маєте показати @kerry_queen 🤝"
     )
 
 
@@ -224,6 +251,7 @@ async def decrease_user_balance(
 
 
 COMMAND_HANDLERS: Final[list["BaseHandler"]] = [
+    CommandHandler('help', help_),
     ConversationHandler(
         entry_points=[
             CommandHandler(
