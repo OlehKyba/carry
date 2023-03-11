@@ -1,3 +1,4 @@
 [development]
 templates_dir = "carry/templates"
 telegram = {token = "secret"}
+admin_ids = [447647899, 417796222]

@@ -1,41 +1,262 @@
+from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Final
 
-from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
-from telegram.ext import CommandHandler, ContextTypes
+from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import CommandHandler, ConversationHandler, ContextTypes, filters, MessageHandler
+from telegram.helpers import create_deep_linked_url
 
+from carry.context import ctx
+from carry.config import settings
+from carry.core.entities import User
+from carry.core.bl import is_admin, create_qr_code
 from carry.core.templates import render_template
 
 if TYPE_CHECKING:
     from telegram.ext import BaseHandler
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        render_template('telegram/help.jinja2')
-    )
+class UserConversationChoices(IntEnum):
+    AFTER_START = 1
+    SHOW_BALANCE = 2
+    CREATE_QR = 3
 
 
-async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        render_template('telegram/help.jinja2')
-    )
+class UserConversationText(StrEnum):
+    SHOW_BALANCE = 'Баланс 💰'
+    CREATE_QR = 'QR-код 👩‍💻'
 
 
-async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [
+class AdminConversationChoices(IntEnum):
+    AFTER_START = 1
+    ASK_USER_NICKNAME = 2
+    SHOW_USERS = 3
+    FIND_USER = 4
+    SHOW_ALL_USERS = 5
+    INCREASE_USER_BALANCE = 6
+    DECREASE_USER_BALANCE = 7
+
+
+class AdminConversationText(StrEnum):
+    FIND_USER = 'Знайти користувача'
+    SHOW_ALL_USERS = 'Список користувачів'
+    INCREASE_USER_BALANCE = 'Додати бонуси ⬆️'
+    DECREASE_USER_BALANCE = 'Зняти бонуси ⬇️'
+
+
+USER_KEYBOARD = ReplyKeyboardMarkup(
+    [
         [
-            KeyboardButton("Option 1"),
-            KeyboardButton("Option 2"),
+            KeyboardButton(UserConversationText.SHOW_BALANCE),
+            KeyboardButton(UserConversationText.CREATE_QR),
         ],
-        [KeyboardButton("Option 3")],
-    ]
+    ],
+    resize_keyboard=True,
+)
 
-    reply_markup = ReplyKeyboardMarkup(keyboard)
+ADMIN_KEYBOARD = ReplyKeyboardMarkup(
+    [
+        [
+            KeyboardButton(
+                AdminConversationText.FIND_USER,
+            ),
+            KeyboardButton(
+                AdminConversationText.SHOW_ALL_USERS,
+            ),
+        ],
+    ],
+    resize_keyboard=True,
+)
 
-    await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+DEEP_LINK_KEYBOARD = ReplyKeyboardMarkup(
+    [
+        [
+            KeyboardButton(
+                AdminConversationText.INCREASE_USER_BALANCE,
+            ),
+            KeyboardButton(
+                AdminConversationText.DECREASE_USER_BALANCE,
+            ),
+        ],
+    ],
+    resize_keyboard=True,
+)
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = User.from_telegram(update.message.from_user)
+    await ctx.user_repository.upsert_user(user)
+    keyboard = (
+        ADMIN_KEYBOARD
+        if is_admin(user.id)
+        else USER_KEYBOARD
+    )
+    await update.message.reply_text(
+        render_template('telegram/help.jinja2'),
+        reply_markup=keyboard,
+    )
+    return UserConversationChoices.AFTER_START
+
+
+async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        render_template('telegram/help.jinja2'),
+    )
+    return UserConversationChoices.AFTER_START
+
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        'Дякую! Гарного дня.',
+        reply_markup=ReplyKeyboardRemove()
+    )
+    return ConversationHandler.END
+
+
+async def show_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    balance = await ctx.user_repository.fetch_balance(update.message.from_user.id)
+    await update.message.reply_text(
+        f'На вашому балансі {balance} бонусів!',
+        reply_to_message_id=update.message.id,
+    )
+    return UserConversationChoices.AFTER_START
+
+
+async def generate_qr_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    url = create_deep_linked_url(
+        context.bot.username,
+        payload=str(update.message.from_user.id)
+    )
+    qr_code = create_qr_code(url)
+    await update.message.reply_photo(
+        qr_code, caption='QR-код, який ви маєте надати Карині!'
+    )
+
+
+async def ask_user_nickname(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        f'Напишіть нікнейм користувача',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return AdminConversationChoices.ASK_USER_NICKNAME
+
+
+async def find_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = 447647899
+    context.user_data['user_id'] = user_id
+    await update.message.reply_text(
+        f'У користувача Oleh[{user_id}] на рахунку 50 бонусів.',
+        reply_markup=DEEP_LINK_KEYBOARD,
+    )
+    return AdminConversationChoices.FIND_USER
+
+
+async def deep_link_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = int(context.args[0])
+    context.user_data['user_id'] = user_id
+    await update.message.reply_text(
+        f'У користувача Oleh[{user_id}] на рахунку 50 бонусів.',
+        reply_markup=DEEP_LINK_KEYBOARD,
+    )
+    return AdminConversationChoices.FIND_USER
+
+
+async def before_increase_user_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        f'Напишіть скільки бонусів ви хочете додати.',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return AdminConversationChoices.INCREASE_USER_BALANCE
+
+
+async def before_decrease_user_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        f'Напишіть скільки бонусів ви хочете забрати.',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return AdminConversationChoices.DECREASE_USER_BALANCE
+
+
+async def increase_user_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = context.user_data['user_id']
+    await update.message.reply_text(
+        f'Додали користувачу Oleh[{user_id}] 15 бонусів.\n'
+        f'Поточний рахунок: 65 бонусів.',
+        reply_markup=ADMIN_KEYBOARD,
+    )
+    context.user_data.clear()
+    return ConversationHandler.END
+
+
+async def decrease_user_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = context.user_data['user_id']
+    await update.message.reply_text(
+        f'Забрали у користувача Oleh[{user_id}] 15 бонусів.\n'
+        f'Поточний рахунок: 35 бонусів.',
+        reply_markup=ADMIN_KEYBOARD,
+    )
+    context.user_data.clear()
+    return ConversationHandler.END
 
 
 COMMAND_HANDLERS: Final[list['BaseHandler']] = [
-    CommandHandler('start', start),
-    CommandHandler('help', help_),
+    ConversationHandler(
+        entry_points=[
+            CommandHandler(
+                'start',
+                deep_link_start,
+                filters.User(settings.admin_ids) and filters.Regex(r'^/start \d+$'),
+            ),
+            CommandHandler('start', start),
+        ],
+        states={
+            UserConversationChoices.AFTER_START: [
+                MessageHandler(
+                    filters.Text([UserConversationText.SHOW_BALANCE]),
+                    show_balance,
+                ),
+                MessageHandler(
+                    filters.Text([UserConversationText.CREATE_QR]),
+                    generate_qr_code,
+                ),
+                MessageHandler(
+                    filters.User(settings.admin_ids)
+                    and filters.Text([AdminConversationText.FIND_USER]),
+                    ask_user_nickname,
+                ),
+            ],
+            AdminConversationChoices.ASK_USER_NICKNAME: [
+                MessageHandler(
+                    filters.User(settings.admin_ids),
+                    find_user,
+                ),
+            ],
+            AdminConversationChoices.FIND_USER: [
+                MessageHandler(
+                    filters.User(settings.admin_ids)
+                    and filters.Text([AdminConversationText.INCREASE_USER_BALANCE]),
+                    before_increase_user_balance,
+                ),
+                MessageHandler(
+                    filters.User(settings.admin_ids)
+                    and filters.Text([AdminConversationText.DECREASE_USER_BALANCE]),
+                    before_decrease_user_balance,
+                ),
+            ],
+            AdminConversationChoices.INCREASE_USER_BALANCE: [
+                MessageHandler(
+                    filters.User(settings.admin_ids)
+                    and filters.Regex(r'^\d+$'),
+                    increase_user_balance,
+                ),
+            ],
+            AdminConversationChoices.DECREASE_USER_BALANCE: [
+                MessageHandler(
+                    filters.User(settings.admin_ids)
+                    and filters.Regex(r'^\d+$'),
+                    decrease_user_balance,
+                ),
+            ],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+    ),
 ]
