@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: dev
+      args:
+        INSTALL_DEV: true
 
   bot:
     image: 'carry'
@@ -19,7 +21,7 @@ services:
       - ./.secrets.toml:/app/.secrets.toml
       - ./poetry.lock:/app/poetry.lock
       - ./pyproject.toml:/app/pyproject.toml
-    command: python -m carry.telegram_bot
+    command: watchmedo auto-restart --recursive --pattern="*.py;settings.toml" --directory="/app/" python -- -m carry.telegram_bot
     depends_on:
       - db
 

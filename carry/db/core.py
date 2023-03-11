@@ -13,8 +13,11 @@ if TYPE_CHECKING:
     from carry.context import Context
 
 mapper_registry = registry()
-analytics_mapper_registry = registry()
-engine = create_async_engine(settings.db.uri, pool_pre_ping=True,)
+metadata = mapper_registry.metadata
+engine = create_async_engine(
+    settings.db.uri,
+    pool_pre_ping=True,
+)
 session_factory = sessionmaker(
     bind=engine,
     expire_on_commit=False,
@@ -26,18 +29,18 @@ class Base(metaclass=DeclarativeMeta):
     __abstract__ = True
 
     registry = mapper_registry
-    metadata = mapper_registry.metadata
+    metadata = metadata
 
     __init__ = mapper_registry.constructor
 
 
-async def create_connection() -> 'AsyncConnection':
+async def create_connection() -> "AsyncConnection":
     conn = await engine.connect()
     return conn
 
 
 @asynccontextmanager
-async def db_session_ctx(ctx: 'Context') -> AsyncIterator[AsyncSession]:
+async def db_session_ctx(ctx: "Context") -> AsyncIterator[AsyncSession]:
     async with session_factory() as session:
         token = ctx.ctx_db.set(session)
         try:

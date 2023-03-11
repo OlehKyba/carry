@@ -1,5 +1,6 @@
 FROM python:3.11-alpine AS venv
 
+ARG INSTALL_DEV=false
 ENV POETRY_VERSION=1.4.0
 
 RUN pip install "poetry==$POETRY_VERSION"
@@ -7,7 +8,7 @@ WORKDIR /app
 COPY ./poetry.lock ./pyproject.toml ./
 
 RUN python -m venv --copies /app/venv
-RUN . /app/venv/bin/activate && poetry install --no-root --only main
+RUN . /app/venv/bin/activate && if [ $INSTALL_DEV == 'true' ]; then poetry install --no-root; else poetry install --no-root --only main; fi
 
 FROM python:3.11-alpine as base
 

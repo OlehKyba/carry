@@ -1,4 +1,5 @@
 [development]
 templates_dir = "carry/templates"
 telegram = {token = "secret"}
-admin_ids = [447647899, 417796222]
+admin_ids = [417796222]
+db = {uri = "postgresql+asyncpg://postgres:postgres@db:5432/carry"}

@@ -12,7 +12,7 @@ class User:
     bonuses: int
 
     @classmethod
-    def from_telegram(cls, tg_user: TelegramUser, bonuses: int = 0) -> 'User':
+    def from_telegram(cls, tg_user: TelegramUser, bonuses: int = 0) -> "User":
         return cls(
             id=tg_user.id,
             first_name=tg_user.first_name,
@@ -26,5 +26,5 @@ class User:
         return (
             self.first_name
             if not self.last_name
-            else f'{self.first_name} {self.last_name}'
+            else f"{self.first_name} {self.last_name}"
         )
