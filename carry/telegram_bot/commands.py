@@ -38,7 +38,7 @@ class UserConversationChoices(IntEnum):
 
 class UserConversationText(StrEnum):
     SHOW_BALANCE = "Баланс 💰"
-    CREATE_QR = "QR-код 👩‍💻"
+    CREATE_QR = "QR-код 🐈"
 
 
 class AdminConversationChoices(IntEnum):
@@ -150,7 +150,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         parse_mode=ParseMode.HTML,
     )
     await update.message.reply_text(
-        '*Корисні посилання* 🔗',
+        '*Корисні посилання* 📎',
         reply_markup=LINKS_KEYBOARD,
         parse_mode=ParseMode.MARKDOWN,
         reply_to_message_id=first_message.id,
@@ -199,7 +199,7 @@ async def generate_qr_code(
     )
     qr_code = create_qr_code(url)
     await update.message.reply_photo(
-        qr_code, caption="Це QR-код, який ви маєте показати @kerry_queen 🤝"
+        qr_code, caption="Це QR-код, який Ви маєте показати @kerry_queen 🤝"
     )
     return UserConversationChoices.AFTER_START
 
@@ -257,7 +257,7 @@ async def before_increase_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     await update.message.reply_text(
-        "Напишіть скільки бонусів ви хочете додати ✍️",
+        "Напишіть скільки бонусів Ви хочете додати ✍️",
         reply_markup=CANCEL_COMMAND_KEYBOARD,
     )
     return AdminConversationChoices.INCREASE_USER_BALANCE
@@ -267,7 +267,7 @@ async def before_decrease_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     await update.message.reply_text(
-        f"Напишіть скільки бонусів ви хочете забрати ✍️",
+        f"Напишіть скільки бонусів Ви хочете забрати ✍️",
         reply_markup=CANCEL_COMMAND_KEYBOARD,
     )
     return AdminConversationChoices.DECREASE_USER_BALANCE
