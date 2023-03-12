@@ -50,6 +50,6 @@ jobs:
     - name: Deploy to Amazon ECS service
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: ${{ steps.render-web-container.outputs.task-definition }}
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
         cluster: carry-tg-bot
         wait-for-service-stability: true
