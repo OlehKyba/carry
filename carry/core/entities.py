@@ -39,7 +39,7 @@ class User:
     @property
     def shor_info(self) -> str:
         return (
-            f'{self.full_name} @{self.username}'
+            f"{self.full_name} @{self.username}"
             if self.username
             else self.full_name
         )

@@ -9,8 +9,8 @@ from carry.core.repositories import UserRepository
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-P = ParamSpec('P')
-RT = TypeVar('RT')
+P = ParamSpec("P")
+RT = TypeVar("RT")
 
 
 class Context:

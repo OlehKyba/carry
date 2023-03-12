@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -28,6 +29,8 @@ from carry.core.repositories import NegativeBonusesError
 
 if TYPE_CHECKING:
     from telegram.ext import BaseHandler
+
+log = logging.getLogger(__name__)
 
 
 class UserConversationChoices(IntEnum):
@@ -112,11 +115,11 @@ LINKS_KEYBOARD = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                'Instagram 📷',
+                "Instagram 📷",
                 url=settings.usefull_links.instagram,
             ),
             InlineKeyboardButton(
-                'Записатися 💅',
+                "Записатися 💅",
                 url=settings.usefull_links.easyweek,
             ),
         ],
@@ -130,9 +133,9 @@ def _choose_keyboard(user_id: int) -> ReplyKeyboardMarkup:
 
 def _create_params(user: User, bonuses: int) -> dict:
     return {
-        'user_info': user.shor_info,
-        'bonuses': bonuses,
-        'total_bonuses': user.bonuses,
+        "user_info": user.shor_info,
+        "bonuses": bonuses,
+        "total_bonuses": user.bonuses,
     }
 
 
@@ -150,7 +153,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         parse_mode=ParseMode.HTML,
     )
     await update.message.reply_text(
-        '*Корисні посилання* 📎',
+        "*Корисні посилання* 📎",
         reply_markup=LINKS_KEYBOARD,
         parse_mode=ParseMode.MARKDOWN,
         reply_to_message_id=first_message.id,
@@ -221,7 +224,7 @@ async def find_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if not user:
         await update.message.reply_text(
-            f'Користувача з нікнеймом *{username}* не знайдено! 😖',
+            f"Користувача з нікнеймом *{username}* не знайдено! 😖",
             reply_markup=_choose_keyboard(update.message.from_user.id),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -290,14 +293,14 @@ async def increase_user_balance(
     params = _create_params(user, bonuses)
     await asyncio.gather(
         update.message.reply_text(
-            render_template('telegram/increase_bonuses/admin.jinja2', params),
+            render_template("telegram/increase_bonuses/admin.jinja2", params),
             reply_markup=ADMIN_KEYBOARD,
             parse_mode=ParseMode.HTML,
         ),
         bot.send_message(
             chat_id=user.chat_id,
             text=render_template(
-                'telegram/increase_bonuses/user.jinja2', params
+                "telegram/increase_bonuses/user.jinja2", params
             ),
             parse_mode=ParseMode.HTML,
         ),
@@ -329,7 +332,7 @@ async def decrease_user_balance(
         await asyncio.gather(
             update.message.reply_text(
                 render_template(
-                    'telegram/decrease_bonuses/admin.jinja2', params
+                    "telegram/decrease_bonuses/admin.jinja2", params
                 ),
                 reply_markup=ADMIN_KEYBOARD,
                 parse_mode=ParseMode.HTML,
@@ -337,7 +340,7 @@ async def decrease_user_balance(
             bot.send_message(
                 chat_id=user.chat_id,
                 text=render_template(
-                    'telegram/decrease_bonuses/user.jinja2', params
+                    "telegram/decrease_bonuses/user.jinja2", params
                 ),
                 parse_mode=ParseMode.HTML,
             ),
@@ -348,7 +351,7 @@ async def decrease_user_balance(
 
 
 COMMAND_HANDLERS: Final[list["BaseHandler"]] = [
-    CommandHandler('help', help_),
+    CommandHandler("help", help_),
     ConversationHandler(
         entry_points=[
             CommandHandler(
@@ -389,7 +392,7 @@ COMMAND_HANDLERS: Final[list["BaseHandler"]] = [
                 MessageHandler(
                     filters.User(settings.admin_ids)
                     and filters.Regex(
-                        r'^[A-Za-z0-9]+([A-Za-z0-9]*|[._-]?[A-Za-z0-9]+)*$'
+                        r"^[A-Za-z0-9]+([A-Za-z0-9]*|[._-]?[A-Za-z0-9]+)*$"
                     ),
                     find_user,
                 ),
