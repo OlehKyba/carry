@@ -9,3 +9,8 @@ easyweek = "https://widget.easyweek.io/prostir-studio/team/39083/41030"
 telegram = {token = "secret"}
 admin_ids = [447647899, 417796222]
 db = {uri = "postgresql+asyncpg://postgres:postgres@db:5432/carry"}
+
+[production]
+telegram = {token = "secret"}
+admin_ids = [447647899, 417796222]
+db = {uri = "secret"}
