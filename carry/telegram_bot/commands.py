@@ -396,6 +396,7 @@ COMMAND_HANDLERS: Final[list["BaseHandler"]] = [
                     filters.User(settings.admin_ids)
                     and filters.Regex(r"^/start \d+$"),
                 ),
+                CommandHandler("start", start),
             ],
             AdminConversationChoices.ASK_USER_NICKNAME: [
                 MessageHandler(

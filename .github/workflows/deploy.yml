@@ -33,3 +33,21 @@ jobs:
       run: |
         docker build --target prd -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
         docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: carry_tg_bot
+        image: ${{ steps.build-image.outputs.image }}
+        environment-variables: |
+            CARRY_DB__URI=${{ secrets.CARRY_DB_URI }}
+            CARRY_TELEGRAM__TOKEN=${{ secrets.CARRY_TELEGRAM_TOKEN }}
+
+    - name: Deploy to Amazon ECS service
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.render-web-container.outputs.task-definition }}
+        cluster: carry-tg-bot
+        wait-for-service-stability: true
