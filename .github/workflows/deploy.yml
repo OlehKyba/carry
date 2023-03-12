@@ -52,4 +52,5 @@ jobs:
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         cluster: carry-tg-bot
+        service: carry-tg-bot-service
         wait-for-service-stability: true
