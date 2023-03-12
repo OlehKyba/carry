@@ -17,7 +17,7 @@ ENV PATH /app/venv/bin:$PATH
 
 WORKDIR /app
 COPY ./carry /app/carry
-COPY ./settings.toml ./.secrets.toml /app/
+COPY ./settings.toml ./.secrets.toml* /app/
 
 FROM base as dev
 
