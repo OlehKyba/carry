@@ -26,6 +26,7 @@ from carry.core.bl import is_admin, create_qr_code
 from carry.core.entities import User
 from carry.core.templates import render_template
 from carry.core.repositories import NegativeBonusesError
+from carry.telegram_bot.logging import log_handler
 
 if TYPE_CHECKING:
     from telegram.ext import BaseHandler
@@ -139,6 +140,7 @@ def _create_params(user: User, bonuses: int) -> dict:
     }
 
 
+@log_handler
 @ctx.with_request_context
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = User.from_telegram(
@@ -161,6 +163,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return UserConversationChoices.AFTER_START
 
 
+@log_handler
 async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         render_template("telegram/help.jinja2"),
@@ -169,6 +172,7 @@ async def help_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return UserConversationChoices.AFTER_START
 
 
+@log_handler
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
     await update.message.reply_text(
@@ -179,6 +183,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return AdminConversationChoices.AFTER_START
 
 
+@log_handler
 @ctx.with_request_context
 async def show_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -194,6 +199,7 @@ async def show_balance(
     return UserConversationChoices.AFTER_START
 
 
+@log_handler
 async def generate_qr_code(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
@@ -207,6 +213,7 @@ async def generate_qr_code(
     return UserConversationChoices.AFTER_START
 
 
+@log_handler
 async def ask_user_nickname(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
@@ -217,6 +224,7 @@ async def ask_user_nickname(
     return AdminConversationChoices.ASK_USER_NICKNAME
 
 
+@log_handler
 @ctx.with_request_context
 async def find_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = update.message.text
@@ -239,6 +247,7 @@ async def find_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return AdminConversationChoices.FIND_USER
 
 
+@log_handler
 @ctx.with_request_context
 async def deep_link_start(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -256,6 +265,7 @@ async def deep_link_start(
     return AdminConversationChoices.FIND_USER
 
 
+@log_handler
 async def before_increase_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
@@ -266,6 +276,7 @@ async def before_increase_user_balance(
     return AdminConversationChoices.INCREASE_USER_BALANCE
 
 
+@log_handler
 async def before_decrease_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
@@ -276,6 +287,7 @@ async def before_decrease_user_balance(
     return AdminConversationChoices.DECREASE_USER_BALANCE
 
 
+@log_handler
 @ctx.with_request_context
 async def increase_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -308,6 +320,7 @@ async def increase_user_balance(
     return AdminConversationChoices.AFTER_START
 
 
+@log_handler
 @ctx.with_request_context
 async def decrease_user_balance(
     update: Update, context: ContextTypes.DEFAULT_TYPE
