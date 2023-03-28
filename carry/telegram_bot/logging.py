@@ -14,11 +14,11 @@ def log_handler(func: Func) -> Func:
         func_name = func.__name__
         try:
             result = await func(*args, **kwargs)
-            log.info(f"[CARRY] Handler '{func_name}' processed message")
+            log.info(f"[CARRY] Handler '{func_name}' processed message!")
             return result
         except Exception:
             log.exception(
-                f"[CARRY] Get exception during '{func_name}' handler work"
+                f"[CARRY] Get exception during '{func_name}' handler work!"
             )
             raise
 
